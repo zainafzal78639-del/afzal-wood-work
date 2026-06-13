@@ -126,48 +126,61 @@ function doExportPDF(results, cfg) {
   const html = `<!DOCTYPE html><html lang="en"><head><meta charset="UTF-8">
 <title>Afzal Wood Work — Cutting List</title>
 <style>
-@page{size:A4 portrait;margin:16mm 14mm}
+@page{size:A4 portrait;margin:14mm 14mm}
 *{box-sizing:border-box;margin:0;padding:0}
 body{font-family:'Segoe UI',Arial,sans-serif;font-size:12px;color:#0f172a;background:#fff}
-.header{display:flex;justify-content:space-between;align-items:flex-start;border-bottom:3px solid #d97706;padding-bottom:12px;margin-bottom:16px}
-.logo-row{display:flex;align-items:center;gap:10px}
-.logo-box{width:40px;height:40px;background:linear-gradient(135deg,#d97706,#f59e0b);border-radius:8px;display:flex;align-items:center;justify-content:center;color:#fff;font-weight:900;font-size:15px}
-.brand-name{font-size:17px;font-weight:900;color:#0f172a}
-.brand-sub{font-size:9px;color:#94a3b8;text-transform:uppercase;letter-spacing:.12em;margin-top:2px}
-.hdr-meta{text-align:right;font-size:11px;color:#64748b;line-height:1.8}
-.hdr-meta strong{color:#0f172a}
+.header{background:linear-gradient(135deg,#0f172a 0%,#1e3a5f 100%);border-radius:12px;padding:22px 24px 18px;margin-bottom:18px;position:relative;overflow:hidden}
+.header::after{content:'';position:absolute;top:-40px;right:-40px;width:160px;height:160px;border-radius:50%;background:rgba(217,119,6,.12);pointer-events:none}
+.logo-row{display:flex;align-items:center;gap:14px;margin-bottom:14px}
+.logo-box{width:50px;height:50px;background:linear-gradient(135deg,#d97706,#f59e0b);border-radius:11px;display:flex;align-items:center;justify-content:center;color:#fff;font-weight:900;font-size:19px;letter-spacing:-1px;flex-shrink:0;box-shadow:0 4px 12px rgba(217,119,6,.4)}
+.brand-name{font-size:22px;font-weight:900;color:#fff;letter-spacing:-.03em;line-height:1}
+.brand-sub{font-size:10px;color:rgba(255,255,255,.45);text-transform:uppercase;letter-spacing:.16em;margin-top:4px}
+.hdr-divider{height:1px;background:rgba(255,255,255,.1);margin-bottom:12px}
+.hdr-info{display:flex;justify-content:space-between;align-items:center;flex-wrap:wrap;gap:8px}
+.hdr-meta{font-size:11px;color:rgba(255,255,255,.55);line-height:1.8}
+.hdr-meta strong{color:#f59e0b;font-weight:700}
+.hdr-badge{background:rgba(217,119,6,.2);border:1px solid rgba(217,119,6,.35);border-radius:20px;padding:4px 14px;font-size:10px;color:#fbbf24;font-weight:700;letter-spacing:.05em;text-transform:uppercase}
 .stats{display:flex;gap:8px;margin-bottom:14px}
-.stat{flex:1;border:1.5px solid #e2e8f0;border-radius:8px;padding:9px;text-align:center}
-.stat-val{font-size:20px;font-weight:900;font-family:'Courier New',monospace;color:#0f172a}
-.stat-lbl{font-size:9px;color:#94a3b8;font-weight:700;text-transform:uppercase;letter-spacing:.07em;margin-top:2px}
-.cfg{background:#f8fafc;border:1px solid #e2e8f0;border-radius:6px;padding:7px 12px;display:flex;gap:14px;margin-bottom:16px;font-size:10px;color:#64748b;flex-wrap:wrap}
+.stat{flex:1;border:1.5px solid #e2e8f0;border-radius:10px;padding:10px 8px;text-align:center;background:#fafbfc}
+.stat-val{font-size:21px;font-weight:900;font-family:'Courier New',monospace;color:#0f172a}
+.stat-lbl{font-size:9px;color:#94a3b8;font-weight:700;text-transform:uppercase;letter-spacing:.07em;margin-top:3px}
+.cfg{background:#f8fafc;border:1px solid #e2e8f0;border-radius:8px;padding:8px 14px;display:flex;gap:14px;margin-bottom:18px;font-size:10px;color:#64748b;flex-wrap:wrap}
 .cfg span{color:#0f172a;font-weight:700;font-family:monospace}
 .section{margin-bottom:18px;page-break-inside:avoid}
-.sec-hd{display:flex;align-items:center;gap:8px;padding:8px 12px;background:#f8fafc;border-radius:6px 6px 0 0}
-.badge{font-size:8px;font-weight:800;color:#fff;padding:2px 7px;border-radius:4px;text-transform:uppercase;letter-spacing:.07em}
-.sec-title{font-weight:700;font-size:12px;color:#0f172a;flex:1}
+.sec-hd{display:flex;align-items:center;gap:8px;padding:9px 14px;background:#f8fafc;border-radius:8px 8px 0 0}
+.badge{font-size:8px;font-weight:800;color:#fff;padding:3px 8px;border-radius:5px;text-transform:uppercase;letter-spacing:.07em}
+.sec-title{font-weight:700;font-size:13px;color:#0f172a;flex:1}
 .sec-tot{font-size:10px;color:#94a3b8;font-weight:600}
 table{width:100%;border-collapse:collapse;border:1.5px solid #e2e8f0;border-top:none}
-th{background:#f1f5f9;padding:7px 12px;font-size:9px;font-weight:800;color:#64748b;text-transform:uppercase;letter-spacing:.08em;border-bottom:1.5px solid #e2e8f0}
-td{padding:8px 12px;border-bottom:1px solid #f1f5f9;font-size:12px}
+th{background:#f1f5f9;padding:8px 14px;font-size:9px;font-weight:800;color:#64748b;text-transform:uppercase;letter-spacing:.08em;border-bottom:1.5px solid #e2e8f0}
+td{padding:9px 14px;border-bottom:1px solid #f1f5f9;font-size:12px}
 tr:last-child td{border-bottom:none}
 tr:nth-child(even) td{background:#fafbfc}
 .right{text-align:right}.center{text-align:center}
 .muted{color:#94a3b8;font-size:10px;font-weight:700}
 .mono{font-family:'Courier New',monospace}.bold{font-weight:700}
 .qpill{display:inline-block;font-weight:900;font-family:'Courier New',monospace;font-size:12px;padding:2px 10px;border-radius:5px}
-.footer{margin-top:20px;padding-top:10px;border-top:1px solid #e2e8f0;display:flex;justify-content:space-between;font-size:9px;color:#94a3b8}
+.footer{margin-top:22px;padding-top:12px;border-top:2px solid #f1f5f9;display:flex;justify-content:space-between;align-items:center}
+.footer-left{font-size:11px;font-weight:800;color:#0f172a}
+.footer-made{font-size:9px;color:#94a3b8;margin-top:2px}
+.footer-right{text-align:right;font-size:9px;color:#94a3b8;line-height:1.7}
 @media print{body{-webkit-print-color-adjust:exact;print-color-adjust:exact}}
 </style></head><body>
 <div class="header">
   <div class="logo-row">
     <div class="logo-box">AW</div>
-    <div><div class="brand-name">AFZAL WOOD WORK</div><div class="brand-sub">Cutting List Generator</div></div>
+    <div>
+      <div class="brand-name">AFZAL WOOD WORK</div>
+      <div class="brand-sub">Professional Cutting List Generator</div>
+    </div>
   </div>
-  <div class="hdr-meta">
-    <div><strong>Date:</strong> ${now}</div>
-    <div><strong>Items:</strong> ${details.length}</div>
-    <div><strong>Total Pieces:</strong> ${totalPcs}</div>
+  <div class="hdr-divider"></div>
+  <div class="hdr-info">
+    <div class="hdr-meta">
+      <div><strong>Date:</strong> ${now}</div>
+      <div><strong>Items:</strong> ${details.length} &nbsp;·&nbsp; <strong>Total Pieces:</strong> ${totalPcs}</div>
+    </div>
+    <div class="hdr-badge">Cutting List</div>
   </div>
 </div>
 <div class="stats">
@@ -185,8 +198,14 @@ tr:nth-child(even) td{background:#fafbfc}
 </div>
 ${sections}
 <div class="footer">
-  <span>Afzal Wood Work — Cutting List Generator</span>
-  <span>Generated: ${now}</span>
+  <div>
+    <div class="footer-left">Afzal Wood Work</div>
+    <div class="footer-made">Made by Zain Afzal</div>
+  </div>
+  <div class="footer-right">
+    <div>Generated: ${now}</div>
+    <div>Cutting List Generator</div>
+  </div>
 </div>
 </body></html>`;
 
@@ -296,7 +315,7 @@ function ItemCard({ item, index, onChange, onRemove, canRemove }) {
           </button>
         )}
       </div>
-      <div style={{ display: "grid", gridTemplateColumns: "repeat(5, 1fr)", gap: 8 }}>
+      <div className="aw-fields" style={{ display: "grid", gridTemplateColumns: "repeat(5,1fr)", gap: 10 }}>
         <Field label="Height" value={item.height} onChange={upd("height")} placeholder="72" />
         <Field label="Width"  value={item.width}  onChange={upd("width")}  placeholder="90" />
         <Field label="Depth"  value={item.depth}  onChange={upd("depth")}  placeholder="55" />
@@ -585,7 +604,8 @@ export default function App() {
     <div style={{ minHeight: "100vh", background: "#f0f4f8", fontFamily: "'Inter','Segoe UI',system-ui,sans-serif" }}>
       <style>{`
         @media(min-width:800px){.aw-layout{grid-template-columns:420px 1fr!important}}
-        @media(max-width:480px){.aw-fields{grid-template-columns:repeat(2,1fr)!important}}
+        @media(max-width:600px){.aw-fields{grid-template-columns:repeat(2,1fr)!important}}
+        @media(min-width:601px) and (max-width:799px){.aw-fields{grid-template-columns:repeat(3,1fr)!important}}
         input::-webkit-outer-spin-button,input::-webkit-inner-spin-button{-webkit-appearance:none}
         input[type=number]{-moz-appearance:textfield}
       `}</style>
