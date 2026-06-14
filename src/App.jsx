@@ -153,13 +153,13 @@ body{font-family:'Segoe UI',Arial,sans-serif;font-size:12px;color:#0f172a;backgr
 .sec-tot{font-size:10px;color:#94a3b8;font-weight:600}
 table{width:100%;border-collapse:collapse;border:1.5px solid #e2e8f0;border-top:none}
 th{background:#f1f5f9;padding:8px 14px;font-size:9px;font-weight:800;color:#64748b;text-transform:uppercase;letter-spacing:.08em;border-bottom:1.5px solid #e2e8f0}
-td{padding:12px 14px;border-bottom:1px solid #f1f5f9;font-size:12px}
+td{padding:14px 16px;border-bottom:1px solid #f1f5f9;font-size:16px}
 tr:last-child td{border-bottom:none}
 tr:nth-child(even) td{background:#fafbfc}
 .right{text-align:right}.center{text-align:center}
 .muted{color:#94a3b8;font-size:10px;font-weight:700}
-.mono{font-family:'Courier New',monospace;font-size:16px}.bold{font-weight:700}
-.qpill{display:inline-block;font-weight:900;font-family:'Courier New',monospace;font-size:15px;padding:3px 12px;border-radius:5px}
+.mono{font-family:'Courier New',monospace;font-size:22px}.bold{font-weight:700}
+.qpill{display:inline-block;font-weight:900;font-family:'Courier New',monospace;font-size:20px;padding:4px 14px;border-radius:6px}
 .footer{margin-top:22px;padding-top:12px;border-top:2px solid #f1f5f9;display:flex;justify-content:space-between;align-items:center}
 .footer-left{font-size:11px;font-weight:800;color:#0f172a}
 .footer-made{font-size:9px;color:#94a3b8;margin-top:2px}
