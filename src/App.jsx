@@ -78,7 +78,7 @@ function aggregateWardrobes(details) {
 }
 
 // ─────────────────────────────────────────────────────────────
-//  PDF EXPORT
+//  PDF EXPORT — 3-column papa style, 1 page guaranteed
 // ─────────────────────────────────────────────────────────────
 function doExportPDF(results, cfg) {
   if (!results) return;
@@ -86,133 +86,211 @@ function doExportPDF(results, cfg) {
   const now = new Date().toLocaleDateString("en-PK", { day: "2-digit", month: "long", year: "numeric" });
   const totalPcs = details.reduce((s, d) => s + d.components.reduce((ss, c) => ss + c.totalQty, 0), 0);
 
-  const secHTML = (title, badge, color, rows) => {
-    if (!rows || !rows.length) return "";
-    const tot = rows.reduce((s, r) => s + r.qty, 0);
-    const rowsH = rows.map((r, i) => `
+  // Build rows for one column
+  const colRows = (rows, bgColor) => {
+    if (!rows || !rows.length) return `<tr><td colspan="3" style="text-align:center;color:#ccc;padding:14px;font-size:13px;">—</td></tr>`;
+    return rows.map(r => `
       <tr>
-        <td class="center muted">${i + 1}</td>
-        <td class="right mono bold">${r.length}</td>
-        <td class="right mono bold">${r.width}</td>
-        <td class="right"><span class="qpill" style="background:${color}18;color:${color}">${r.qty}</span></td>
+        <td style="background:${bgColor}">${r.length}</td>
+        <td style="background:${bgColor};font-weight:900;color:#000">${r.width}</td>
+        <td style="background:${bgColor}">${r.qty}</td>
       </tr>`).join("");
-    return `
-      <div class="section">
-        <div class="sec-hd" style="border-left:4px solid ${color}">
-          <span class="badge" style="background:${color}">${badge}</span>
-          <span class="sec-title">${title}</span>
-          <span class="sec-tot">${tot} pcs</span>
-        </div>
-        <table>
-          <thead><tr><th class="center">#</th><th class="right">Length (cm)</th><th class="right">Width (cm)</th><th class="right">Qty</th></tr></thead>
-          <tbody>${rowsH}</tbody>
-        </table>
-      </div>`;
   };
 
-  let sections = "";
+  // Determine columns based on type
+  let col1rows = [], col2rows = [], col3rows = [];
+  let col1label = "1.6mm", col2label = "0.8mm", col3label = "1.6mm";
+  let col1title = "BASE Carcass", col2title = "Back Panels", col3title = "UPPER Carcass";
+  let col1bg = "#e8f5e9", col2bg = "#e3f2fd", col3bg = "#fce4ec";
+
   if (type === "cabinet" || type === "mixed") {
-    sections += secHTML("BASE Cabinet Carcass — 1.6mm Board", "Section A", "#0369a1", summary.sA || []);
-    sections += secHTML("Back Panels — 0.8mm Board", "Section B", "#7c3aed", summary.sB || []);
-    sections += secHTML("UPPER Cabinet Carcass — 1.6mm Board", "Section C", "#0d9488", summary.sC || []);
+    col1rows = summary.sA || [];
+    col2rows = summary.sB || [];
+    col3rows = summary.sC || [];
+  } else if (type === "wardrobe") {
+    col1rows = summary.sA || [];
+    col2rows = summary.sB || [];
+    col3rows = [];
+    col1title = "Carcass"; col3title = "";
   }
-  if (type === "wardrobe") {
-    sections += secHTML("Wardrobe Carcass — 1.6mm Board", "Carcass", "#0369a1", summary.sA || []);
-    sections += secHTML("Back Panels — 0.8mm Board", "Back", "#7c3aed", summary.sB || []);
-  }
-  if (type === "mixed" && summary.sW && summary.sW.length)
-    sections += secHTML("Wardrobe Carcass — 1.6mm Board", "Wardrobe", "#b45309", summary.sW);
+
+  // Max rows to determine table height
+  const maxRows = Math.max(col1rows.length, col2rows.length, col3rows.length, 1);
 
   const html = `<!DOCTYPE html><html lang="en"><head><meta charset="UTF-8">
 <title>Afzal Wood Work — Cutting List</title>
 <style>
-@page{size:A4 portrait;margin:14mm 14mm}
+@page{size:A4 landscape;margin:10mm 12mm}
 *{box-sizing:border-box;margin:0;padding:0}
-body{font-family:'Segoe UI',Arial,sans-serif;font-size:12px;color:#0f172a;background:#fff}
-.header{background:linear-gradient(135deg,#0f172a 0%,#1e3a5f 100%);border-radius:12px;padding:22px 24px 18px;margin-bottom:18px;position:relative;overflow:hidden}
-.header::after{content:'';position:absolute;top:-40px;right:-40px;width:160px;height:160px;border-radius:50%;background:rgba(217,119,6,.12);pointer-events:none}
-.logo-row{display:flex;align-items:center;gap:14px;margin-bottom:14px}
-.logo-box{width:50px;height:50px;background:linear-gradient(135deg,#d97706,#f59e0b);border-radius:11px;display:flex;align-items:center;justify-content:center;color:#fff;font-weight:900;font-size:19px;letter-spacing:-1px;flex-shrink:0;box-shadow:0 4px 12px rgba(217,119,6,.4)}
-.brand-name{font-size:22px;font-weight:900;color:#fff;letter-spacing:-.03em;line-height:1}
-.brand-sub{font-size:10px;color:rgba(255,255,255,.45);text-transform:uppercase;letter-spacing:.16em;margin-top:4px}
-.hdr-divider{height:1px;background:rgba(255,255,255,.1);margin-bottom:12px}
-.hdr-info{display:flex;justify-content:space-between;align-items:center;flex-wrap:wrap;gap:8px}
-.hdr-meta{font-size:11px;color:rgba(255,255,255,.55);line-height:1.8}
-.hdr-meta strong{color:#f59e0b;font-weight:700}
-.hdr-badge{background:rgba(217,119,6,.2);border:1px solid rgba(217,119,6,.35);border-radius:20px;padding:4px 14px;font-size:10px;color:#fbbf24;font-weight:700;letter-spacing:.05em;text-transform:uppercase}
-.stats{display:flex;gap:8px;margin-bottom:14px}
-.stat{flex:1;border:1.5px solid #e2e8f0;border-radius:10px;padding:10px 8px;text-align:center;background:#fafbfc}
-.stat-val{font-size:21px;font-weight:900;font-family:'Courier New',monospace;color:#0f172a}
-.stat-lbl{font-size:9px;color:#94a3b8;font-weight:700;text-transform:uppercase;letter-spacing:.07em;margin-top:3px}
-.cfg{background:#f8fafc;border:1px solid #e2e8f0;border-radius:8px;padding:8px 14px;display:flex;gap:14px;margin-bottom:18px;font-size:10px;color:#64748b;flex-wrap:wrap}
-.cfg span{color:#0f172a;font-weight:700;font-family:monospace}
-.section{margin-bottom:18px;page-break-inside:avoid}
-.sec-hd{display:flex;align-items:center;gap:8px;padding:9px 14px;background:#f8fafc;border-radius:8px 8px 0 0}
-.badge{font-size:8px;font-weight:800;color:#fff;padding:3px 8px;border-radius:5px;text-transform:uppercase;letter-spacing:.07em}
-.sec-title{font-weight:700;font-size:13px;color:#0f172a;flex:1}
-.sec-tot{font-size:10px;color:#94a3b8;font-weight:600}
-table{width:100%;border-collapse:collapse;border:1.5px solid #e2e8f0;border-top:none}
-th{background:#f1f5f9;padding:8px 14px;font-size:9px;font-weight:800;color:#64748b;text-transform:uppercase;letter-spacing:.08em;border-bottom:1.5px solid #e2e8f0}
-td{padding:20px 22px;border-bottom:1px solid #f1f5f9;font-size:22px}
-tr:last-child td{border-bottom:none}
-tr:nth-child(even) td{background:#fafbfc}
-.right{text-align:right}.center{text-align:center}
-.muted{color:#94a3b8;font-size:10px;font-weight:700}
-.mono{font-family:'Courier New',monospace;font-size:30px}.bold{font-weight:700}
-.qpill{display:inline-block;font-weight:900;font-family:'Courier New',monospace;font-size:28px;padding:6px 20px;border-radius:6px}
-.footer{margin-top:22px;padding-top:12px;border-top:2px solid #f1f5f9;display:flex;justify-content:space-between;align-items:center}
+html,body{height:100%;overflow:hidden}
+body{font-family:'Arial',sans-serif;background:#fff;color:#0f172a;
+  display:flex;flex-direction:column;height:100%}
+
+/* HEADER */
+.hdr{background:linear-gradient(135deg,#0f172a,#1e3a5f);border-radius:10px;
+  padding:14px 20px;margin-bottom:10px;display:flex;align-items:center;
+  justify-content:space-between;flex-shrink:0}
+.hdr-left{display:flex;align-items:center;gap:12px}
+.logo{width:44px;height:44px;background:linear-gradient(135deg,#d97706,#f59e0b);
+  border-radius:9px;display:flex;align-items:center;justify-content:center;
+  color:#fff;font-weight:900;font-size:17px;flex-shrink:0}
+.brand{font-size:20px;font-weight:900;color:#fff;letter-spacing:-.02em}
+.brand-sub{font-size:9px;color:rgba(255,255,255,.45);text-transform:uppercase;letter-spacing:.15em;margin-top:3px}
+.hdr-right{text-align:right;font-size:11px;color:rgba(255,255,255,.6);line-height:1.8}
+.hdr-right strong{color:#f59e0b}
+
+/* MAIN 3-COL GRID */
+.cols{display:grid;grid-template-columns:1fr 1fr 1fr;gap:10px;flex:1;min-height:0}
+.col{display:flex;flex-direction:column;border:2px solid #ddd;border-radius:8px;overflow:hidden}
+
+/* COL HEADER */
+.col-hd{padding:8px 0 6px;text-align:center;flex-shrink:0}
+.col-board{font-size:26px;font-weight:900;font-family:'Courier New',monospace;color:#0f172a;line-height:1}
+.col-title{font-size:11px;color:#555;font-weight:700;margin-top:3px;text-transform:uppercase;letter-spacing:.05em}
+
+/* TABLE */
+.col table{width:100%;border-collapse:collapse;flex:1}
+.col thead th{font-size:11px;font-weight:800;text-align:center;padding:7px 4px;
+  border-top:2px solid #ddd;border-bottom:2px solid #ddd;letter-spacing:.04em;color:#333}
+.col tbody td{text-align:center;font-size:18px;font-weight:800;
+  font-family:'Courier New',monospace;padding:8px 4px;border-bottom:1px solid rgba(0,0,0,.06)}
+.col tbody tr:last-child td{border-bottom:none}
+
+/* FOOTER */
+.footer{display:flex;justify-content:space-between;align-items:center;
+  margin-top:8px;padding-top:6px;border-top:1.5px solid #e2e8f0;flex-shrink:0}
 .footer-left{font-size:11px;font-weight:800;color:#0f172a}
-.footer-made{font-size:9px;color:#94a3b8;margin-top:2px}
-.footer-right{text-align:right;font-size:9px;color:#94a3b8;line-height:1.7}
-@media print{body{-webkit-print-color-adjust:exact;print-color-adjust:exact}}
+.footer-made{font-size:9px;color:#94a3b8;margin-top:1px}
+.footer-right{font-size:9px;color:#94a3b8;text-align:right;line-height:1.7}
+
+@media print{
+  body{-webkit-print-color-adjust:exact;print-color-adjust:exact;height:100vh;overflow:hidden}
+  html,body{page-break-after:avoid;page-break-before:avoid}
+}
 </style></head><body>
-<div class="header">
-  <div class="logo-row">
-    <div class="logo-box">AW</div>
+
+<!-- HEADER -->
+<div class="hdr">
+  <div class="hdr-left">
+    <div class="logo">AW</div>
     <div>
-      <div class="brand-name">AFZAL WOOD WORK</div>
+      <div class="brand">AFZAL WOOD WORK</div>
       <div class="brand-sub">Professional Cutting List Generator</div>
     </div>
   </div>
-  <div class="hdr-divider"></div>
-  <div class="hdr-info">
-    <div class="hdr-meta">
-      <div><strong>Date:</strong> ${now}</div>
-      <div><strong>Items:</strong> ${details.length} &nbsp;·&nbsp; <strong>Total Pieces:</strong> ${totalPcs}</div>
-    </div>
-    <div class="hdr-badge">Cutting List</div>
+  <div class="hdr-right">
+    <div><strong>Date:</strong> ${now}</div>
+    <div><strong>Items:</strong> ${details.length} &nbsp;·&nbsp; <strong>Total Pieces:</strong> ${totalPcs}</div>
+    <div>Clearance: <strong>${cfg.CLEARANCE}mm</strong> &nbsp;|&nbsp; Shelf −: <strong>${cfg.SHELF_DEPTH_REDUCTION}mm</strong></div>
   </div>
 </div>
-<div class="stats">
-  <div class="stat"><div class="stat-val">${totalPcs}</div><div class="stat-lbl">Total Pieces</div></div>
-  <div class="stat"><div class="stat-val">${details.length}</div><div class="stat-lbl">Items</div></div>
-  <div class="stat"><div class="stat-val">${cfg.CLEARANCE}mm</div><div class="stat-lbl">Clearance</div></div>
-  <div class="stat"><div class="stat-val">${cfg.SHELF_DEPTH_REDUCTION}mm</div><div class="stat-lbl">Shelf −</div></div>
+
+<!-- 3 COLUMNS -->
+<div class="cols">
+
+  <!-- COL 1: BASE Carcass / Wardrobe Carcass -->
+  <div class="col">
+    <div class="col-hd" style="background:${col1bg}">
+      <div class="col-board">${col1label}</div>
+      <div class="col-title">${col1title}</div>
+    </div>
+    <table>
+      <thead><tr>
+        <th>Length</th><th>Width</th><th>Qty</th>
+      </tr></thead>
+      <tbody>${colRows(col1rows, col1bg)}</tbody>
+    </table>
+  </div>
+
+  <!-- COL 2: Back Panels -->
+  <div class="col">
+    <div class="col-hd" style="background:${col2bg}">
+      <div class="col-board">${col2label}</div>
+      <div class="col-title">${col2title}</div>
+    </div>
+    <table>
+      <thead><tr>
+        <th>Length</th><th>Width</th><th>Qty</th>
+      </tr></thead>
+      <tbody>${colRows(col2rows, col2bg)}</tbody>
+    </table>
+  </div>
+
+  <!-- COL 3: UPPER Carcass -->
+  <div class="col">
+    <div class="col-hd" style="background:${col3bg}">
+      <div class="col-board">${col3label}</div>
+      <div class="col-title">${col3title}</div>
+    </div>
+    <table>
+      <thead><tr>
+        <th>Length</th><th>Width</th><th>Qty</th>
+      </tr></thead>
+      <tbody>${colRows(col3rows, col3bg)}</tbody>
+    </table>
+  </div>
+
 </div>
-<div class="cfg">
-  Clearance: <span>${cfg.CLEARANCE}mm</span> &nbsp;|&nbsp;
-  Shelf Reduction: <span>${cfg.SHELF_DEPTH_REDUCTION}mm</span> &nbsp;|&nbsp;
-  Strip Height: <span>${cfg.BASE_STRIP_HEIGHT}mm</span> &nbsp;|&nbsp;
-  Carcass: <span>${cfg.BOARD_CARCASS}</span> &nbsp;|&nbsp;
-  Back: <span>${cfg.BOARD_BACK}</span>
-</div>
-${sections}
+
+<!-- FOOTER -->
 <div class="footer">
   <div>
-    <div class="footer-left">Afzal Wood Work</div>
+    <div class="footer-left">Afzal Wood Work — Kitchen Cutting List</div>
     <div class="footer-made">Made by Zain Afzal</div>
   </div>
   <div class="footer-right">
     <div>Generated: ${now}</div>
-    <div>Cutting List Generator</div>
+    <div>afzal-woodwork.vercel.app</div>
   </div>
 </div>
+
 </body></html>`;
 
-  const w = window.open("", "_blank", "width=794,height=1123");
+  // Open print window
+  const w = window.open("", "_blank", "width=1050,height=750");
   w.document.write(html);
   w.document.close();
-  w.onload = () => setTimeout(() => { w.focus(); w.print(); }, 300);
+  w.onload = () => setTimeout(() => { w.focus(); w.print(); }, 400);
+}
+
+// Share function — Web Share API (mobile) or clipboard fallback
+function doShare(results, cfg) {
+  if (!results) return;
+  const { summary, type, details } = results;
+  const now = new Date().toLocaleDateString("en-PK", { day: "2-digit", month: "short", year: "numeric" });
+  const totalPcs = details.reduce((s, d) => s + d.components.reduce((ss, c) => ss + c.totalQty, 0), 0);
+
+  const tbl = (title, rows) => {
+    if (!rows || !rows.length) return "";
+    let t = `\n*${title}*\n`;
+    t += "```\n";
+    t += "Length   Width    Qty\n";
+    t += "─────────────────────\n";
+    rows.forEach(r => { t += `${String(r.length).padEnd(9)}${String(r.width).padEnd(9)}${r.qty}\n`; });
+    t += "```";
+    return t;
+  };
+
+  let text = `*AFZAL WOOD WORK — Cutting List*\n`;
+  text += `Date: ${now} | Items: ${details.length} | Total: ${totalPcs} pcs\n`;
+  text += `Clearance: ${cfg.CLEARANCE}mm | Shelf−: ${cfg.SHELF_DEPTH_REDUCTION}mm\n`;
+
+  if (type === "cabinet" || type === "mixed") {
+    text += tbl("Section A — BASE Carcass (1.6mm)", summary.sA || []);
+    text += tbl("Section B — Back Panels (0.8mm)", summary.sB || []);
+    text += tbl("Section C — UPPER Carcass (1.6mm)", summary.sC || []);
+  }
+  if (type === "wardrobe") {
+    text += tbl("Wardrobe Carcass (1.6mm)", summary.sA || []);
+    text += tbl("Back Panels (0.8mm)", summary.sB || []);
+  }
+  text += `\n_Made by Zain Afzal_`;
+
+  if (navigator.share) {
+    navigator.share({ title: "Afzal Wood Work — Cutting List", text });
+  } else {
+    navigator.clipboard.writeText(text).then(() => alert("Cutting list copied! Paste in WhatsApp."));
+  }
 }
 
 // ─────────────────────────────────────────────────────────────
@@ -244,7 +322,12 @@ const IconCopy = () => (
     <rect x="9" y="9" width="13" height="13" rx="2"/><path d="M5 15H4a2 2 0 01-2-2V4a2 2 0 012-2h9a2 2 0 012 2v1"/>
   </svg>
 );
-const IconPDF = () => (
+const IconShare = () => (
+  <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+    <circle cx="18" cy="5" r="3"/><circle cx="6" cy="12" r="3"/><circle cx="18" cy="19" r="3"/>
+    <line x1="8.59" y1="13.51" x2="15.42" y2="17.49"/><line x1="15.41" y1="6.51" x2="8.59" y2="10.49"/>
+  </svg>
+);
   <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
     <path d="M14 2H6a2 2 0 00-2 2v16a2 2 0 002 2h12a2 2 0 002-2V8z"/>
     <polyline points="14 2 14 8 20 8"/>
@@ -439,7 +522,7 @@ function DetailAccordion({ detail }) {
 // ─────────────────────────────────────────────────────────────
 //  RESULTS PANEL
 // ─────────────────────────────────────────────────────────────
-function ResultsPanel({ results, onCopy, copied, onExportPDF }) {
+function ResultsPanel({ results, onCopy, copied, onExportPDF, onShare }) {
   if (!results) return null;
   const { details, summary, type } = results;
   const isCabinet = type === "cabinet";
@@ -488,15 +571,23 @@ function ResultsPanel({ results, onCopy, copied, onExportPDF }) {
         </>
       )}
 
-      {/* Export PDF Button */}
-      <button onClick={onExportPDF} style={{ display: "flex", alignItems: "center", justifyContent: "center",
-        gap: 6, padding: "11px", borderRadius: 9, border: "2px solid #dc2626", background: "#fff",
-        color: "#dc2626", fontSize: 13, fontWeight: 700, cursor: "pointer", marginTop: 4, marginBottom: 16,
-        transition: "all .15s" }}
-        onMouseEnter={e => { e.currentTarget.style.background = "#fef2f2"; e.currentTarget.style.transform = "translateY(-1px)"; }}
-        onMouseLeave={e => { e.currentTarget.style.background = "#fff"; e.currentTarget.style.transform = "translateY(0)"; }}>
-        <IconPDF /> Export as PDF
-      </button>
+      {/* Export PDF + Share buttons */}
+      <div style={{ display: "flex", gap: 8, marginTop: 4, marginBottom: 16 }}>
+        <button onClick={onExportPDF} style={{ flex: 1, display: "flex", alignItems: "center", justifyContent: "center",
+          gap: 6, padding: "11px", borderRadius: 9, border: "2px solid #dc2626", background: "#fff",
+          color: "#dc2626", fontSize: 13, fontWeight: 700, cursor: "pointer", transition: "all .15s" }}
+          onMouseEnter={e => { e.currentTarget.style.background = "#fef2f2"; e.currentTarget.style.transform = "translateY(-1px)"; }}
+          onMouseLeave={e => { e.currentTarget.style.background = "#fff"; e.currentTarget.style.transform = "translateY(0)"; }}>
+          <IconPDF /> Export PDF
+        </button>
+        <button onClick={onShare} style={{ flex: 1, display: "flex", alignItems: "center", justifyContent: "center",
+          gap: 6, padding: "11px", borderRadius: 9, border: "2px solid #16a34a", background: "#fff",
+          color: "#16a34a", fontSize: 13, fontWeight: 700, cursor: "pointer", transition: "all .15s" }}
+          onMouseEnter={e => { e.currentTarget.style.background = "#f0fdf4"; e.currentTarget.style.transform = "translateY(-1px)"; }}
+          onMouseLeave={e => { e.currentTarget.style.background = "#fff"; e.currentTarget.style.transform = "translateY(0)"; }}>
+          <IconShare /> Share
+        </button>
+      </div>
 
       {/* Per-item detail */}
       <p style={{ fontSize: 10, fontWeight: 800, color: "#94a3b8", letterSpacing: "0.08em",
@@ -584,6 +675,7 @@ export default function App() {
   };
 
   const handleExportPDF = () => doExportPDF(results, cfg);
+  const handleShare = () => doShare(results, cfg);
 
   const S = {
     hdr: { background: "linear-gradient(135deg,#0f172a,#1a2744)", borderBottom: "3px solid #d97706",
@@ -616,8 +708,8 @@ export default function App() {
           <div style={{ display: "flex", alignItems: "center", gap: 10 }}>
             <div style={S.logo}><IconWood /></div>
             <div>
-              <div style={{ fontWeight: 800, fontSize: 12, color: "#fff" }}>AFZAL WOOD WORK</div>
-              <div style={{ fontSize: 8, color: "#64748b", letterSpacing: ".0.8em", textTransform: "uppercase" }}>Cutting List Generator</div>
+              <div style={{ fontWeight: 800, fontSize: 15, color: "#fff" }}>AFZAL WOOD WORK</div>
+              <div style={{ fontSize: 9, color: "#64748b", letterSpacing: ".14em", textTransform: "uppercase" }}>Cutting List Generator</div>
             </div>
           </div>
           <div style={{ display: "flex", alignItems: "center", gap: 8 }}>
@@ -732,7 +824,7 @@ export default function App() {
           {/* RIGHT */}
           <div>
             {results ? (
-              <ResultsPanel results={results} onCopy={handleCopy} copied={copied} onExportPDF={handleExportPDF} />
+              <ResultsPanel results={results} onCopy={handleCopy} copied={copied} onExportPDF={handleExportPDF} onShare={handleShare} />
             ) : (
               <div style={S.empty}>
                 <div style={{ width: 56, height: 56, borderRadius: 14, background: "linear-gradient(135deg,#fef3c7,#fde68a)",
