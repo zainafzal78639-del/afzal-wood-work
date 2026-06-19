@@ -86,15 +86,23 @@ function doExportPDF(results, cfg) {
   const now = new Date().toLocaleDateString("en-PK", { day: "2-digit", month: "long", year: "numeric" });
   const totalPcs = details.reduce((s, d) => s + d.components.reduce((ss, c) => ss + c.totalQty, 0), 0);
 
-  // Build rows for one column
+  // Build rows for one column — bold numbers + empty rows like Google Sheets
+  const TOTAL_ROWS = 18; // fixed rows to fill the page
   const colRows = (rows, bgColor) => {
-    if (!rows || !rows.length) return `<tr><td colspan="3" style="text-align:center;color:#ccc;padding:14px;font-size:13px;">—</td></tr>`;
-    return rows.map(r => `
+    const dataRows = (rows || []).map(r => `
       <tr>
-        <td style="background:${bgColor}">${r.length}</td>
-        <td style="background:${bgColor};font-weight:900;color:#000">${r.width}</td>
-        <td style="background:${bgColor}">${r.qty}</td>
+        <td style="background:${bgColor};font-size:22px;font-weight:900;font-family:'Arial Black',Arial,sans-serif;text-align:center;padding:9px 4px;border-bottom:1px solid rgba(0,0,0,.08);color:#111">${r.length}</td>
+        <td style="background:${bgColor};font-size:22px;font-weight:900;font-family:'Arial Black',Arial,sans-serif;text-align:center;padding:9px 4px;border-bottom:1px solid rgba(0,0,0,.08);color:#111">${r.width}</td>
+        <td style="background:${bgColor};font-size:22px;font-weight:900;font-family:'Arial Black',Arial,sans-serif;text-align:center;padding:9px 4px;border-bottom:1px solid rgba(0,0,0,.08);color:#111">${r.qty}</td>
       </tr>`).join("");
+    const emptyCount = Math.max(0, TOTAL_ROWS - (rows || []).length);
+    const emptyRows = Array(emptyCount).fill(`
+      <tr>
+        <td style="background:${bgColor};padding:9px 4px;border-bottom:1px solid rgba(0,0,0,.08)">&nbsp;</td>
+        <td style="background:${bgColor};padding:9px 4px;border-bottom:1px solid rgba(0,0,0,.08)">&nbsp;</td>
+        <td style="background:${bgColor};padding:9px 4px;border-bottom:1px solid rgba(0,0,0,.08)">&nbsp;</td>
+      </tr>`).join("");
+    return dataRows + emptyRows;
   };
 
   // Determine columns based on type
@@ -144,16 +152,17 @@ body{font-family:'Arial',sans-serif;background:#fff;color:#0f172a;
 .col{display:flex;flex-direction:column;border:2px solid #ddd;border-radius:8px;overflow:hidden}
 
 /* COL HEADER */
-.col-hd{padding:8px 0 6px;text-align:center;flex-shrink:0}
-.col-board{font-size:26px;font-weight:900;font-family:'Courier New',monospace;color:#0f172a;line-height:1}
-.col-title{font-size:11px;color:#555;font-weight:700;margin-top:3px;text-transform:uppercase;letter-spacing:.05em}
+.col-hd{padding:10px 0 8px;text-align:center;flex-shrink:0;border-bottom:2px solid rgba(0,0,0,.12)}
+.col-board{font-size:34px;font-weight:900;font-family:'Arial Black',Arial,sans-serif;color:#0f172a;line-height:1}
+.col-title{font-size:12px;color:#444;font-weight:800;margin-top:4px;text-transform:uppercase;letter-spacing:.06em}
 
 /* TABLE */
 .col table{width:100%;border-collapse:collapse;flex:1}
-.col thead th{font-size:11px;font-weight:800;text-align:center;padding:7px 4px;
-  border-top:2px solid #ddd;border-bottom:2px solid #ddd;letter-spacing:.04em;color:#333}
-.col tbody td{text-align:center;font-size:18px;font-weight:800;
-  font-family:'Courier New',monospace;padding:8px 4px;border-bottom:1px solid rgba(0,0,0,.06)}
+.col thead th{font-size:13px;font-weight:900;text-align:center;padding:8px 4px;
+  border-top:2px solid rgba(0,0,0,.12);border-bottom:2px solid rgba(0,0,0,.12);
+  letter-spacing:.04em;color:#111;font-family:'Arial Black',Arial,sans-serif}
+.col tbody td{text-align:center;font-size:22px;font-weight:900;
+  font-family:'Arial Black',Arial,sans-serif;padding:9px 4px;border-bottom:1px solid rgba(0,0,0,.08);color:#111}
 .col tbody tr:last-child td{border-bottom:none}
 
 /* FOOTER */
