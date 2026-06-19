@@ -78,7 +78,7 @@ function aggregateWardrobes(details) {
 }
 
 // ─────────────────────────────────────────────────────────────
-//  PDF EXPORT — 3-column papa style, 1 page guaranteed
+//  PDF EXPORT — White bg, height first, 1 page, big font
 // ─────────────────────────────────────────────────────────────
 function doExportPDF(results, cfg) {
   if (!results) return;
@@ -86,180 +86,109 @@ function doExportPDF(results, cfg) {
   const now = new Date().toLocaleDateString("en-PK", { day: "2-digit", month: "long", year: "numeric" });
   const totalPcs = details.reduce((s, d) => s + d.components.reduce((ss, c) => ss + c.totalQty, 0), 0);
 
-  // Build rows for one column — bold numbers + empty rows like Google Sheets
-  const TOTAL_ROWS = 18; // fixed rows to fill the page
-  const colRows = (rows, bgColor) => {
-    const dataRows = (rows || []).map(r => `
-      <tr>
-        <td style="background:${bgColor};font-size:22px;font-weight:900;font-family:'Arial Black',Arial,sans-serif;text-align:center;padding:9px 4px;border-bottom:1px solid rgba(0,0,0,.08);color:#111">${r.length}</td>
-        <td style="background:${bgColor};font-size:22px;font-weight:900;font-family:'Arial Black',Arial,sans-serif;text-align:center;padding:9px 4px;border-bottom:1px solid rgba(0,0,0,.08);color:#111">${r.width}</td>
-        <td style="background:${bgColor};font-size:22px;font-weight:900;font-family:'Arial Black',Arial,sans-serif;text-align:center;padding:9px 4px;border-bottom:1px solid rgba(0,0,0,.08);color:#111">${r.qty}</td>
-      </tr>`).join("");
-    const emptyCount = Math.max(0, TOTAL_ROWS - (rows || []).length);
-    const emptyRows = Array(emptyCount).fill(`
-      <tr>
-        <td style="background:${bgColor};padding:9px 4px;border-bottom:1px solid rgba(0,0,0,.08)">&nbsp;</td>
-        <td style="background:${bgColor};padding:9px 4px;border-bottom:1px solid rgba(0,0,0,.08)">&nbsp;</td>
-        <td style="background:${bgColor};padding:9px 4px;border-bottom:1px solid rgba(0,0,0,.08)">&nbsp;</td>
-      </tr>`).join("");
+  // Sort: biggest width first = Height/Sides come first
+  const sortHeightFirst = (rows) =>
+    [...(rows || [])].sort((a, b) => b.width - a.width || b.length - a.length);
+
+  const TOTAL_ROWS = 16;
+  const colRows = (rows) => {
+    const sorted = sortHeightFirst(rows);
+    const dataRows = sorted.map(r =>
+      `<tr><td>${r.length}</td><td>${r.width}</td><td>${r.qty}</td></tr>`
+    ).join("");
+    const emptyCount = Math.max(0, TOTAL_ROWS - sorted.length);
+    const emptyRows = Array(emptyCount).fill(
+      `<tr><td>&nbsp;</td><td>&nbsp;</td><td>&nbsp;</td></tr>`
+    ).join("");
     return dataRows + emptyRows;
   };
 
-  // Determine columns based on type
   let col1rows = [], col2rows = [], col3rows = [];
-  let col1label = "1.6mm", col2label = "0.8mm", col3label = "1.6mm";
+  let col1label = "1.6", col2label = "0.8", col3label = "1.6";
   let col1title = "BASE Carcass", col2title = "Back Panels", col3title = "UPPER Carcass";
-  let col1bg = "#e8f5e9", col2bg = "#e3f2fd", col3bg = "#fce4ec";
 
   if (type === "cabinet" || type === "mixed") {
-    col1rows = summary.sA || [];
-    col2rows = summary.sB || [];
-    col3rows = summary.sC || [];
+    col1rows = summary.sA || []; col2rows = summary.sB || []; col3rows = summary.sC || [];
   } else if (type === "wardrobe") {
-    col1rows = summary.sA || [];
-    col2rows = summary.sB || [];
-    col3rows = [];
+    col1rows = summary.sA || []; col2rows = summary.sB || []; col3rows = [];
     col1title = "Carcass"; col3title = "";
   }
-
-  // Max rows to determine table height
-  const maxRows = Math.max(col1rows.length, col2rows.length, col3rows.length, 1);
 
   const html = `<!DOCTYPE html><html lang="en"><head><meta charset="UTF-8">
 <title>Afzal Wood Work — Cutting List</title>
 <style>
-@page{size:A4 landscape;margin:10mm 12mm}
+@page{size:A4 landscape;margin:7mm 9mm}
 *{box-sizing:border-box;margin:0;padding:0}
-html,body{height:100%;overflow:hidden}
-body{font-family:'Arial',sans-serif;background:#fff;color:#0f172a;
-  display:flex;flex-direction:column;height:100%}
-
-/* HEADER */
-.hdr{background:linear-gradient(135deg,#0f172a,#1e3a5f);border-radius:10px;
-  padding:14px 20px;margin-bottom:10px;display:flex;align-items:center;
+html,body{height:100vh;max-height:100vh;overflow:hidden;background:#fff}
+body{font-family:'Arial Black',Arial,sans-serif;color:#000;
+  display:flex;flex-direction:column;height:100vh}
+.hdr{background:linear-gradient(135deg,#0f172a,#1e3a5f);border-radius:7px;
+  padding:9px 14px;margin-bottom:6px;display:flex;align-items:center;
   justify-content:space-between;flex-shrink:0}
-.hdr-left{display:flex;align-items:center;gap:12px}
-.logo{width:44px;height:44px;background:linear-gradient(135deg,#d97706,#f59e0b);
-  border-radius:9px;display:flex;align-items:center;justify-content:center;
-  color:#fff;font-weight:900;font-size:17px;flex-shrink:0}
-.brand{font-size:20px;font-weight:900;color:#fff;letter-spacing:-.02em}
-.brand-sub{font-size:9px;color:rgba(255,255,255,.45);text-transform:uppercase;letter-spacing:.15em;margin-top:3px}
-.hdr-right{text-align:right;font-size:11px;color:rgba(255,255,255,.6);line-height:1.8}
+.hdr-left{display:flex;align-items:center;gap:9px}
+.logo{width:34px;height:34px;background:linear-gradient(135deg,#d97706,#f59e0b);
+  border-radius:6px;display:flex;align-items:center;justify-content:center;
+  color:#fff;font-weight:900;font-size:13px;flex-shrink:0}
+.brand{font-size:15px;font-weight:900;color:#fff;white-space:nowrap}
+.brand-sub{font-size:7px;color:rgba(255,255,255,.4);text-transform:uppercase;letter-spacing:.14em;margin-top:1px}
+.hdr-right{text-align:right;font-size:10px;color:rgba(255,255,255,.65);line-height:1.7}
 .hdr-right strong{color:#f59e0b}
-
-/* MAIN 3-COL GRID */
-.cols{display:grid;grid-template-columns:1fr 1fr 1fr;gap:10px;flex:1;min-height:0}
-.col{display:flex;flex-direction:column;border:2px solid #ddd;border-radius:8px;overflow:hidden}
-
-/* COL HEADER */
-.col-hd{padding:10px 0 8px;text-align:center;flex-shrink:0;border-bottom:2px solid rgba(0,0,0,.12)}
-.col-board{font-size:34px;font-weight:900;font-family:'Arial Black',Arial,sans-serif;color:#0f172a;line-height:1}
-.col-title{font-size:12px;color:#444;font-weight:800;margin-top:4px;text-transform:uppercase;letter-spacing:.06em}
-
-/* TABLE */
-.col table{width:100%;border-collapse:collapse;flex:1}
-.col thead th{font-size:13px;font-weight:900;text-align:center;padding:8px 4px;
-  border-top:2px solid rgba(0,0,0,.12);border-bottom:2px solid rgba(0,0,0,.12);
-  letter-spacing:.04em;color:#111;font-family:'Arial Black',Arial,sans-serif}
-.col tbody td{text-align:center;font-size:22px;font-weight:900;
-  font-family:'Arial Black',Arial,sans-serif;padding:9px 4px;border-bottom:1px solid rgba(0,0,0,.08);color:#111}
+.cols{display:grid;grid-template-columns:1fr 1fr 1fr;gap:6px;flex:1;min-height:0;overflow:hidden}
+.col{display:flex;flex-direction:column;border:2.5px solid #111;background:#fff;overflow:hidden}
+.col-hd{padding:5px 0 4px;text-align:center;border-bottom:2.5px solid #111;flex-shrink:0;background:#fff}
+.col-board{font-size:26px;font-weight:900;color:#000;line-height:1}
+.col-title{font-size:9px;color:#222;font-weight:800;margin-top:2px;text-transform:uppercase;letter-spacing:.05em}
+.col table{width:100%;border-collapse:collapse;table-layout:fixed;background:#fff}
+.col thead th{font-size:12px;font-weight:900;text-align:center;padding:5px 2px;
+  border-bottom:2.5px solid #111;color:#000;background:#fff}
+.col tbody td{text-align:center;font-size:26px;font-weight:900;
+  padding:4px 2px;border-bottom:1px solid #aaa;color:#000;background:#fff;line-height:1.1}
 .col tbody tr:last-child td{border-bottom:none}
-
-/* FOOTER */
 .footer{display:flex;justify-content:space-between;align-items:center;
-  margin-top:8px;padding-top:6px;border-top:1.5px solid #e2e8f0;flex-shrink:0}
-.footer-left{font-size:11px;font-weight:800;color:#0f172a}
-.footer-made{font-size:9px;color:#94a3b8;margin-top:1px}
-.footer-right{font-size:9px;color:#94a3b8;text-align:right;line-height:1.7}
-
-@media print{
-  body{-webkit-print-color-adjust:exact;print-color-adjust:exact;height:100vh;overflow:hidden}
-  html,body{page-break-after:avoid;page-break-before:avoid}
-}
+  margin-top:5px;padding-top:4px;border-top:1.5px solid #bbb;flex-shrink:0}
+.footer-left{font-size:10px;font-weight:900;color:#000}
+.footer-made{font-size:7px;color:#555;margin-top:1px;font-family:Arial,sans-serif;font-weight:400}
+.footer-right{font-size:7px;color:#555;text-align:right;line-height:1.6;font-family:Arial,sans-serif;font-weight:400}
+@media print{html,body{height:100vh;max-height:100vh;overflow:hidden;
+  -webkit-print-color-adjust:exact;print-color-adjust:exact}}
 </style></head><body>
-
-<!-- HEADER -->
 <div class="hdr">
   <div class="hdr-left">
     <div class="logo">AW</div>
-    <div>
-      <div class="brand">AFZAL WOOD WORK</div>
-      <div class="brand-sub">Professional Cutting List Generator</div>
-    </div>
+    <div><div class="brand">AFZAL WOOD WORK</div><div class="brand-sub">Professional Cutting List Generator</div></div>
   </div>
   <div class="hdr-right">
-    <div><strong>Date:</strong> ${now}</div>
-    <div><strong>Items:</strong> ${details.length} &nbsp;·&nbsp; <strong>Total Pieces:</strong> ${totalPcs}</div>
-    <div>Clearance: <strong>${cfg.CLEARANCE}mm</strong> &nbsp;|&nbsp; Shelf −: <strong>${cfg.SHELF_DEPTH_REDUCTION}mm</strong></div>
+    <div><strong>Date:</strong> ${now} &nbsp;·&nbsp; <strong>Total Pieces:</strong> ${totalPcs}</div>
+    <div>Clearance: <strong>${cfg.CLEARANCE}mm</strong> &nbsp;|&nbsp; Shelf−: <strong>${cfg.SHELF_DEPTH_REDUCTION}mm</strong> &nbsp;|&nbsp; Items: <strong>${details.length}</strong></div>
   </div>
 </div>
-
-<!-- 3 COLUMNS -->
 <div class="cols">
-
-  <!-- COL 1: BASE Carcass / Wardrobe Carcass -->
   <div class="col">
-    <div class="col-hd" style="background:${col1bg}">
-      <div class="col-board">${col1label}</div>
-      <div class="col-title">${col1title}</div>
-    </div>
-    <table>
-      <thead><tr>
-        <th>Length</th><th>Width</th><th>Qty</th>
-      </tr></thead>
-      <tbody>${colRows(col1rows, col1bg)}</tbody>
-    </table>
+    <div class="col-hd"><div class="col-board">${col1label}</div><div class="col-title">${col1title}</div></div>
+    <table><thead><tr><th>Length</th><th>Width</th><th>Qty</th></tr></thead>
+    <tbody>${colRows(col1rows)}</tbody></table>
   </div>
-
-  <!-- COL 2: Back Panels -->
   <div class="col">
-    <div class="col-hd" style="background:${col2bg}">
-      <div class="col-board">${col2label}</div>
-      <div class="col-title">${col2title}</div>
-    </div>
-    <table>
-      <thead><tr>
-        <th>Length</th><th>Width</th><th>Qty</th>
-      </tr></thead>
-      <tbody>${colRows(col2rows, col2bg)}</tbody>
-    </table>
+    <div class="col-hd"><div class="col-board">${col2label}</div><div class="col-title">${col2title}</div></div>
+    <table><thead><tr><th>Length</th><th>Width</th><th>Qty</th></tr></thead>
+    <tbody>${colRows(col2rows)}</tbody></table>
   </div>
-
-  <!-- COL 3: UPPER Carcass -->
   <div class="col">
-    <div class="col-hd" style="background:${col3bg}">
-      <div class="col-board">${col3label}</div>
-      <div class="col-title">${col3title}</div>
-    </div>
-    <table>
-      <thead><tr>
-        <th>Length</th><th>Width</th><th>Qty</th>
-      </tr></thead>
-      <tbody>${colRows(col3rows, col3bg)}</tbody>
-    </table>
+    <div class="col-hd"><div class="col-board">${col3label}</div><div class="col-title">${col3title}</div></div>
+    <table><thead><tr><th>Length</th><th>Width</th><th>Qty</th></tr></thead>
+    <tbody>${colRows(col3rows)}</tbody></table>
   </div>
-
 </div>
-
-<!-- FOOTER -->
 <div class="footer">
-  <div>
-    <div class="footer-left">Afzal Wood Work — Kitchen Cutting List</div>
-    <div class="footer-made">Made by Zain Afzal</div>
-  </div>
-  <div class="footer-right">
-    <div>Generated: ${now}</div>
-    <div>afzal-woodwork.vercel.app</div>
-  </div>
+  <div><div class="footer-left">Afzal Wood Work — Cutting List</div><div class="footer-made">Made by Zain Afzal</div></div>
+  <div class="footer-right"><div>Generated: ${now}</div><div>afzal-wood-work.vercel.app</div></div>
 </div>
-
+<script>window.onload=function(){setTimeout(function(){window.print();},400);};<\/script>
 </body></html>`;
 
-  // Open print window
-  const w = window.open("", "_blank", "width=1050,height=750");
+  const w = window.open("", "_blank", "width=1122,height=794");
   w.document.write(html);
   w.document.close();
-  w.onload = () => setTimeout(() => { w.focus(); w.print(); }, 400);
 }
 
 // Share function — Web Share API (mobile) or clipboard fallback
@@ -718,8 +647,8 @@ export default function App() {
           <div style={{ display: "flex", alignItems: "center", gap: 10 }}>
             <div style={S.logo}><IconWood /></div>
             <div>
-              <div style={{ fontWeight: 800, fontSize: 12, color: "#fff",letterSpacing: "0.01em", whiteSpace: "nowrap" }}>AFZAL WOOD WORK</div>
-              <div style={{ fontSize: 8, color: "#64748b", letterSpacing: ".1em", textTransform: "uppercase",whiteSpace: "nowrap" }}>Cutting List Generator</div>
+              <div style={{ fontWeight: 800, fontSize: 15, color: "#fff" }}>AFZAL WOOD WORK</div>
+              <div style={{ fontSize: 9, color: "#64748b", letterSpacing: ".14em", textTransform: "uppercase" }}>Cutting List Generator</div>
             </div>
           </div>
           <div style={{ display: "flex", alignItems: "center", gap: 8 }}>
