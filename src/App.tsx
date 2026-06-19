@@ -718,8 +718,8 @@ export default function App() {
           <div style={{ display: "flex", alignItems: "center", gap: 10 }}>
             <div style={S.logo}><IconWood /></div>
             <div>
-              <div style={{ fontWeight: 800, fontSize: 15, color: "#fff" }}>AFZAL WOOD WORK</div>
-              <div style={{ fontSize: 9, color: "#64748b", letterSpacing: ".14em", textTransform: "uppercase" }}>Cutting List Generator</div>
+              <div style={{ fontWeight: 800, fontSize: 12, color: "#fff",letterSpacing: "0.01em", whiteSpace: "nowrap" }}>AFZAL WOOD WORK</div>
+              <div style={{ fontSize: 8, color: "#64748b", letterSpacing: ".1em", textTransform: "uppercase",whiteSpace: "nowrap" }}>Cutting List Generator</div>
             </div>
           </div>
           <div style={{ display: "flex", alignItems: "center", gap: 8 }}>
