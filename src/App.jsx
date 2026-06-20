@@ -119,39 +119,61 @@ function doExportPDF(results, cfg) {
 <style>
 @page{size:A4 landscape;margin:7mm 9mm}
 *{box-sizing:border-box;margin:0;padding:0}
-html,body{height:100vh;max-height:100vh;overflow:hidden;background:#fff}
+html{background:#fff}
 body{font-family:'Arial Black',Arial,sans-serif;color:#000;
-  display:flex;flex-direction:column;height:100vh}
+  display:flex;flex-direction:column;
+  width:277mm;height:182mm;
+  max-width:277mm;max-height:182mm;
+  overflow:hidden;background:#fff}
 .hdr{background:linear-gradient(135deg,#0f172a,#1e3a5f);border-radius:7px;
-  padding:9px 14px;margin-bottom:6px;display:flex;align-items:center;
+  padding:8px 14px;margin-bottom:5px;display:flex;align-items:center;
   justify-content:space-between;flex-shrink:0}
 .hdr-left{display:flex;align-items:center;gap:9px}
-.logo{width:34px;height:34px;background:linear-gradient(135deg,#d97706,#f59e0b);
+.logo{width:32px;height:32px;background:linear-gradient(135deg,#d97706,#f59e0b);
   border-radius:6px;display:flex;align-items:center;justify-content:center;
-  color:#fff;font-weight:900;font-size:13px;flex-shrink:0}
-.brand{font-size:15px;font-weight:900;color:#fff;white-space:nowrap}
-.brand-sub{font-size:7px;color:rgba(255,255,255,.4);text-transform:uppercase;letter-spacing:.14em;margin-top:1px}
-.hdr-right{text-align:right;font-size:10px;color:rgba(255,255,255,.65);line-height:1.7}
+  color:#fff;font-weight:900;font-size:12px;flex-shrink:0}
+.brand{font-size:14px;font-weight:900;color:#fff;white-space:nowrap}
+.brand-sub{font-size:7px;color:rgba(255,255,255,.4);text-transform:uppercase;letter-spacing:.12em;margin-top:1px}
+.hdr-right{text-align:right;font-size:9px;color:rgba(255,255,255,.65);line-height:1.7}
 .hdr-right strong{color:#f59e0b}
-.cols{display:grid;grid-template-columns:1fr 1fr 1fr;gap:6px;flex:1;min-height:0;overflow:hidden}
-.col{display:flex;flex-direction:column;border:2.5px solid #111;background:#fff;overflow:hidden}
-.col-hd{padding:5px 0 4px;text-align:center;border-bottom:2.5px solid #111;flex-shrink:0;background:#fff}
-.col-board{font-size:26px;font-weight:900;color:#000;line-height:1}
-.col-title{font-size:9px;color:#222;font-weight:800;margin-top:2px;text-transform:uppercase;letter-spacing:.05em}
+.cols{display:grid;grid-template-columns:1fr 1fr 1fr;gap:5px;flex:1;min-height:0;overflow:hidden}
+.col{display:flex;flex-direction:column;border:2px solid #111;background:#fff;overflow:hidden}
+.col-hd{padding:4px 0 3px;text-align:center;border-bottom:2px solid #111;flex-shrink:0;background:#fff}
+.col-board{font-size:22px;font-weight:900;color:#000;line-height:1}
+.col-title{font-size:8px;color:#222;font-weight:800;margin-top:1px;text-transform:uppercase;letter-spacing:.04em}
 .col table{width:100%;border-collapse:collapse;table-layout:fixed;background:#fff}
-.col thead th{font-size:12px;font-weight:900;text-align:center;padding:5px 2px;
-  border-bottom:2.5px solid #111;color:#000;background:#fff}
-.col tbody td{text-align:center;font-size:26px;font-weight:900;
-  padding:4px 2px;border-bottom:1px solid #aaa;color:#000;background:#fff;line-height:1.1}
+.col thead th{font-size:11px;font-weight:900;text-align:center;padding:4px 2px;
+  border-bottom:2px solid #111;color:#000;background:#fff}
+.col tbody td{text-align:center;font-size:22px;font-weight:900;
+  padding:3px 2px;border-bottom:1px solid #bbb;color:#000;background:#fff;line-height:1.1}
 .col tbody tr:last-child td{border-bottom:none}
 .footer{display:flex;justify-content:space-between;align-items:center;
-  margin-top:5px;padding-top:4px;border-top:1.5px solid #bbb;flex-shrink:0}
-.footer-left{font-size:10px;font-weight:900;color:#000}
+  margin-top:4px;padding-top:3px;border-top:1px solid #bbb;flex-shrink:0}
+.footer-left{font-size:9px;font-weight:900;color:#000}
 .footer-made{font-size:7px;color:#555;margin-top:1px;font-family:Arial,sans-serif;font-weight:400}
-.footer-right{font-size:7px;color:#555;text-align:right;line-height:1.6;font-family:Arial,sans-serif;font-weight:400}
-@media print{html,body{height:100vh;max-height:100vh;overflow:hidden;
-  -webkit-print-color-adjust:exact;print-color-adjust:exact}}
+.footer-right{font-size:7px;color:#555;text-align:right;line-height:1.5;font-family:Arial,sans-serif;font-weight:400}
+@media print{
+  @page{size:A4 landscape;margin:7mm 9mm}
+  html,body{
+    width:277mm;height:182mm;max-width:277mm;max-height:182mm;
+    overflow:hidden;
+    -webkit-print-color-adjust:exact;print-color-adjust:exact
+  }
+}
 </style></head><body>
+<div id="landscape-notice" style="position:fixed;top:0;left:0;right:0;bottom:0;background:rgba(0,0,0,.7);z-index:9999;display:flex;align-items:center;justify-content:center">
+  <div style="background:#fff;border-radius:12px;padding:24px 32px;text-align:center;max-width:340px;box-shadow:0 8px 32px rgba(0,0,0,.3)">
+    <div style="font-size:36px;margin-bottom:12px">📄</div>
+    <div style="font-size:16px;font-weight:900;color:#0f172a;margin-bottom:8px">Print Settings</div>
+    <div style="font-size:13px;color:#334155;line-height:1.6;font-family:Arial,sans-serif;font-weight:400">
+      Print dialog mein:<br>
+      <strong>Orientation → Landscape</strong> select karo<br>
+      <strong>Scale → Fit to Page</strong> karo<br>
+      Phir Print karo — sirf 1 page aayega
+    </div>
+    <div style="margin-top:14px;font-size:11px;color:#94a3b8;font-family:Arial,sans-serif">Auto-opening in 2 seconds...</div>
+  </div>
+</div>
 <div class="hdr">
   <div class="hdr-left">
     <div class="logo">AW</div>
@@ -183,7 +205,20 @@ body{font-family:'Arial Black',Arial,sans-serif;color:#000;
   <div><div class="footer-left">Afzal Wood Work — Cutting List</div><div class="footer-made">Made by Zain Afzal</div></div>
   <div class="footer-right"><div>Generated: ${now}</div><div>afzal-wood-work.vercel.app</div></div>
 </div>
-<script>window.onload=function(){setTimeout(function(){window.print();},400);};<\/script>
+<script>
+window.onload = function() {
+  // Show landscape reminder
+  var notice = document.getElementById('landscape-notice');
+  if (notice) {
+    setTimeout(function() {
+      notice.style.display = 'none';
+      window.print();
+    }, 2500);
+  } else {
+    setTimeout(function() { window.print(); }, 500);
+  }
+};
+<\/script>
 </body></html>`;
 
   const w = window.open("", "_blank", "width=1122,height=794");
